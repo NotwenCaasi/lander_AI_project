@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 logging.basicConfig(level=logging.INFO)
-
 class Animation:
     def __init__(self, lander, ai_model, planet, start_position, total_time=100, dt=0.1, display=True):
         self.lander = lander
@@ -21,6 +20,8 @@ class Animation:
         self.ax = None
 
     def update(self, frame):
+ 
+
         # AI controls the lander
         thrust, angle = self.ai_model.control()
         logging.info(f"Frame {frame}: Thrust = {thrust}, Angle = {angle}")
@@ -30,6 +31,11 @@ class Animation:
         logging.info(f"Frame {frame}: Position: {self.lander.position}, Velocity: {self.lander.velocity}, Fuel: {self.lander.fuel}")
 
         if self.display:
+            if self.lander.crashed:
+                logging.info(f"Lander crashed at frame {frame}. Stopping simulation.")
+                self.lander_marker.set_marker('x')
+                self.ani.event_source.stop()
+                return  # Stop updating if lander has crashed
             # Update the marker in the display
             self.lander_marker.set_data([self.lander.position[0]], [self.lander.position[1]])
             return self.lander_marker,  # Ensure the marker is returned as a tuple
@@ -52,7 +58,7 @@ class Animation:
         # Reset the lander to its initial position
         self.lander.reset(self.start_position)
         logging.info(f"Lander reset to start position: {self.start_position}")
-
+        
         if self.display:
             # Setup the display for animation
             self.setup_display()
@@ -67,3 +73,6 @@ class Animation:
             # No display, just run the physics update
             for frame in range(int(self.total_time / self.dt)):
                 self.update(frame)
+                if self.lander.crashed:
+                    logging.info(f"Simulation stopped at frame {frame} due to crash.")
+                    break
