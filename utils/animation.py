@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 logging.basicConfig(level=logging.INFO)
+
 class Animation:
     def __init__(self, lander, ai_model, planet, start_position, total_time=100, dt=0.1, display=True):
         self.lander = lander
@@ -20,8 +21,6 @@ class Animation:
         self.ax = None
 
     def update(self, frame):
- 
-
         # AI controls the lander
         thrust, angle = self.ai_model.control()
         logging.info(f"Frame {frame}: Thrust = {thrust}, Angle = {angle}")
@@ -43,15 +42,28 @@ class Animation:
     def setup_display(self):
         """Setup the display for animation."""
         self.fig, self.ax = plt.subplots(figsize=(10, 6))
+
+        # Set the background color to black
+        self.fig.patch.set_facecolor('black')
+        self.ax.set_facecolor('black')
+
+        # Plot the terrain in white
         x, y = zip(*self.planet.terrain)
-        self.ax.plot(x, y, label="Terrain")
+        self.ax.plot(x, y, color="white", label="Terrain")
+
+        # Set limits for the display
         self.ax.set_ylim(-200, self.planet.atmosphere_thickness)
         self.ax.set_xlim(0, self.planet.ground_length)
 
-        # Initialize lander plot
+        # Remove axis ticks and labels
+        self.ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+
+        # Initialize lander plot with a red marker
         self.lander_marker, = self.ax.plot([], [], 'ro', label="Lander")
-        plt.legend()
-        plt.title("Lander Descent Animation")
+
+        # Set the title in white and adjust the legend color
+        plt.legend(facecolor='black', edgecolor='white')
+        plt.title("Lander Descent Animation", color="white")
 
     def run(self):
         """Run the simulation."""

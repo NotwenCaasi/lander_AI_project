@@ -58,7 +58,7 @@ def main():
     start_position = (x0, y0, v0, a0, t0)  # Start at x=5000, altitude=800, speed = 0, angle=0, thrust=0
 
     # Create basic AI model
-    ai_model = BasicAI(lander, target_descent_rate=-5)
+    ai_model = BasicAI(lander, planet, target_descent_rate=-5)
 
     # Create the Animation object without display
     animation = Animation(lander, ai_model, planet, start_position,
