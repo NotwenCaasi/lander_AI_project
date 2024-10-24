@@ -1,0 +1,12 @@
+
+decrease learning rate
+clip gradient norm
+Visualize individual components of the reward (dx, dy, velocity penalties, etc.) to see if certain parts of the reward function are causing the instability.
+
+1- Log detailed behaviors during the stagnation period to understand what's happening (rewards, actions, exploration rate).
+2- Adjust exploration by modifying the epsilon-greedy strategy to ensure sufficient exploration.
+3- Try reward rescaling or reward shaping to provide more guided feedback.
+4- Use learning rate decay or adaptive learning rates to refine updates after stagnation.
+5- Apply gradient clipping and L2 regularization to stabilize learning and prevent chaotic behavior.
+6- Check replay buffer diversity if using DQN, and consider prioritized experience replay.
+7- Experiment with curriculum learning, starting with simpler environments and gradually increasing complexity.

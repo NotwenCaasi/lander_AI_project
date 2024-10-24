@@ -42,7 +42,13 @@ def update_lander_state(lander, planet, dt):
     acceleration = total_force / lander.mass
     lander.velocity += acceleration * dt
     lander.position += lander.velocity * dt
-
+    if lander.position[0]>planet.ground_length :
+        lander.position[0] -= planet.ground_length
+    elif lander.position[0] < 0 :
+        lander.position[0] += planet.ground_length
+    else:
+        pass
+    
     # Check for terrain collision (lander's y position should be above the terrain)
     landed_or_crashed = detect_terrain_collision(lander, planet)
     if landed_or_crashed == 'flying':
@@ -60,8 +66,12 @@ def update_lander_state(lander, planet, dt):
         lander.position[1] += lander.velocity[1] * dt  # Update y position
 
     # Update fuel usage (assume constant consumption per unit of thrust)
-    lander.fuel -= lander.thrust*lander.max_thrust * dt/lander.max_fuel
+    df = lander.thrust*lander.max_thrust * dt/lander.max_fuel
+    logging.info(f"fuel variation = {df}")
+    lander.fuel -= df
     lander.fuel = max(0, lander.fuel)
+    
+    
     
     return 0
 

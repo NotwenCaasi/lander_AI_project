@@ -2,19 +2,12 @@
 # Contains lander dynamics and aero properties
 # Lander dynamics and state updates
 
-# import logging
-# logging.basicConfig(level=logging.INFO)
-
-# class Lander:
-#     def update(self, thrust, angle_change, gravity, air_density):
-#         # Log state updates
-#         logging.info(f"Updating lander: thrust={thrust}, angle_change={angle_change}")
-
 # lander/lander.py
 
 import numpy as np
 import math
-# lander/lander.py
+
+from environments.physics import get_terrain_height_at_x
 
 class Lander:
     def __init__(self, max_thrust, max_fuel, drag_coeff, mass, surface_area):
@@ -69,3 +62,38 @@ class Lander:
         self.thrust = t
         self.is_landed = False
         self.crashed = False  # Reset crash status
+    
+    def adjust_fuel(self, fuel_quantity):
+        """
+        Adjust the initial fuel quantity at atmosphere entry.
+        """
+        self.fuel = min(fuel_quantity, self.max_fuel)
+    
+    def sense_terrain(self, planet, num_rays=5, max_distance=1000):
+        """
+        Simulate terrain sensing with ray casting.
+        Returns an array of distances to obstacles in specified directions.
+        """
+        angles = np.linspace(-np.pi/2, np.pi/2, num_rays)  # Rays from -90 to +90 degrees relative to lander
+        distances = []
+    
+        for angle in angles:
+            distance = self.cast_ray(planet, angle, max_distance)
+            distances.append(distance)
+        
+        return distances
+    
+    def cast_ray(self, planet, angle, max_distance):
+        """
+        Cast a ray from the lander's current position at a given angle.
+        Returns the distance to the first obstacle within max_distance.
+        """
+        x0, y0 = self.position
+        angle += np.deg2rad(self.angle)  # Adjust for lander's orientation
+        for d in np.linspace(0, max_distance, num=100):
+            x = x0 + d * np.cos(angle)
+            y = y0 + d * np.sin(angle)
+            terrain_height = get_terrain_height_at_x(self, planet.terrain)
+            if y <= terrain_height:
+                return d  # Obstacle detected
+        return max_distance  # No obstacle within max_distance

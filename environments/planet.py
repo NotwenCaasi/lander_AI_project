@@ -2,15 +2,16 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 class Planet:
-    def __init__(self, radius, atmosphere_thickness, air_ground_density, gravity_constant):
-        self.radius = radius
-        self.atmosphere_thickness = atmosphere_thickness
-        self.air_ground_density = air_ground_density
-        self.gravity_constant = gravity_constant
+    def __init__(self, radius=None, atmosphere_thickness=None, air_ground_density=None, gravity_constant=None):
+        self.radius = random.uniform(1000, 10000) if radius is None else radius
+        self.atmosphere_thickness = random.uniform(500, 1500) if atmosphere_thickness is None else atmosphere_thickness
+        self.air_ground_density = random.uniform(0.5, 3.0) if air_ground_density is None else air_ground_density
+        self.gravity_constant = random.uniform(1.0, 20.0) if gravity_constant is None else gravity_constant
         
-        self.ground_length = radius * 2 * np.pi  # Circumference of the planet
+        self.ground_length = self.radius * 2 * np.pi  # Circumference of the planet
 
         # Generate the terrain with a flat landing area
         self.terrain, self.landing_zone = self.generate_terrain()
@@ -51,7 +52,7 @@ class Planet:
         # Create a flat landing area
         flat_start = int((num_points - flat_length / total_length * num_points) // 2)
         flat_end = flat_start + int(flat_length / total_length * num_points)
-        y[flat_start:flat_end] = 0  # Flat landing zone
+        y[flat_start:flat_end] = y0  # Flat landing zone
 
         landing_zone = [[flat_start, y0], [flat_end, y0]]
 

@@ -1,11 +1,12 @@
 # utils/animation.py
 
 import logging
-from environments.physics import update_lander_state
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 
-logging.basicConfig(level=logging.INFO)
+from environments.physics import update_lander_state
+from matplotlib.animation import FuncAnimation
+from training.reward_functions import compute_reward
+
 
 class Animation:
     def __init__(self, lander, ai_model, planet, start_position, total_time=100, dt=0.1, display=True):
@@ -19,25 +20,64 @@ class Animation:
         self.ani = None  # Placeholder for animation object if used
         self.fig = None
         self.ax = None
-
-    def update(self, frame):
-        # AI controls the lander
-        thrust, angle = self.ai_model.control()
-        logging.info(f"Frame {frame}: Thrust = {thrust}, Angle = {angle}")
         
+        # Initialize previous distances to target at the start of the episode
+        self.prev_dx = min(abs(self.lander.position[0] - self.ai_model.landing_x_center),
+                        abs(self.lander.position[0]+self.planet.ground_length - self.ai_model.landing_x_center))   
+        self.prev_dy = abs(self.lander.position[1] - self.ai_model.landing_y_center)
+        # Initialize previous fuel level
+        self.prev_fuel = 100
+        
+    def update(self, frame):
+        # Get the current state
+        state = self.ai_model.get_state_vector()
+        # AI controls the lander
+        thrust, angle_change, thrust_idx, angle_idx = self.ai_model.control()
+        logging.info(f"Frame {frame}: Thrust = {thrust}, Angle Change = {angle_change}")
+
         # Update the lander physics
         update_lander_state(self.lander, self.planet, self.dt)
         logging.info(f"Frame {frame}: Position: {self.lander.position}, Velocity: {self.lander.velocity}, Fuel: {self.lander.fuel}")
+
+        # Get the next state
+        next_state = self.ai_model.get_state_vector()
+        
+        # Compute reward
+        r1, r2, r3, r4, r5, r6, r7, r8 = compute_reward( 
+             self.lander, self.planet.landing_zone, self.prev_dx, self.prev_dy, self.prev_fuel)
+        reward = r1
+        distance_reward = r2
+        v_speed_penalty = r3
+        h_speed_penalty = r4
+        fuel_penalty = r5
+        self.prev_dx = r6
+        self.prev_dy = r7
+        self.prev_fuel = r8
+
+        done = self.lander.crashed or self.lander.is_landed
+        
+        # Log individual reward components
+        logging.info(f"Frame {frame}: Total Reward = {reward}, "
+                     f"Distance Reward = {distance_reward}, "
+                     f"Vertical Speed Penalty = {v_speed_penalty}, "
+                     f"Horizontal Speed Penalty = {h_speed_penalty}, "
+                     f"Fuel Penalty = {fuel_penalty}")
+        
+
+        # Remember the experience
+        self.ai_model.ai_model.remember(state, (thrust_idx, angle_idx), reward, next_state, done)
+        # Train the AI model
+        self.ai_model.ai_model.replay()
 
         if self.display:
             if self.lander.crashed:
                 logging.info(f"Lander crashed at frame {frame}. Stopping simulation.")
                 self.lander_marker.set_marker('x')
                 self.ani.event_source.stop()
-                return  # Stop updating if lander has crashed
+                return
             # Update the marker in the display
             self.lander_marker.set_data([self.lander.position[0]], [self.lander.position[1]])
-            return self.lander_marker,  # Ensure the marker is returned as a tuple
+            return self.lander_marker,
 
     def setup_display(self):
         """Setup the display for animation."""
