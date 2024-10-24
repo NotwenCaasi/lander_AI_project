@@ -27,3 +27,4 @@ lander_ai_project/
 │
 ├── main.py                    # Main script to run the simulation and train AI
 └── README.md                  # Documentation about the project
+
